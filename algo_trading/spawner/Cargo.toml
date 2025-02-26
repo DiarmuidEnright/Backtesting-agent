@@ -1,0 +1,13 @@
+[package]
+name = "spawner"
+version = "0.1.0"
+authors = ["Casey Primozic <me@ameo.link>"]
+description = "Instance spawner and management system for the TickGrinder algorithmic trading platform"
+
+[profile.release]
+opt-level = 3
+debug = true
+debug-assertions = false
+
+[dependencies]
+tantivy = { git = "https://github.com/tantivy-search/tantivy.git", rev = "27c373d26df7ba89e04f596dc76507436f90d89c" }

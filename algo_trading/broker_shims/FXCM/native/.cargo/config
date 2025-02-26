@@ -1,0 +1,10 @@
+[build]
+rustflags = [
+    "-L", "../../../../../../../target/release/deps",
+    "-L", "../../../../../../target/release/deps",
+    "-L", "../util/target/release/deps",
+    "-L", "../../util/target/release/deps",
+    "-L", "../../../util/target/release/deps",
+    "-L", "native/dist",
+    "-C", "prefer-dynamic",
+]

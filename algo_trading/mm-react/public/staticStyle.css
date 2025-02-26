@@ -1,0 +1,7 @@
+html, body, #root {
+  height:100%;
+}
+
+input {
+  background-color: #313130 !important;
+}

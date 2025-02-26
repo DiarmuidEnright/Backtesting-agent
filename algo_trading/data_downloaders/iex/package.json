@@ -1,0 +1,30 @@
+{
+  "name": "iex",
+  "version": "1.0.0",
+  "dependencies": {
+    "socket.io": "1.7.3"
+  },
+  "description": "Data Downloader using the public IEX data feed as a data source",
+  "devDependencies": {
+    "babel-cli": "*",
+    "babel-core": "*",
+    "babel-eslint": "*",
+    "babel-plugin-transform-flow-strip-types": "*",
+    "babel-preset-es2015-node5": "*",
+    "babel-preset-stage-3": "*",
+    "babel-register": "*",
+    "eslint": ">=2.0.0",
+    "eslint-plugin-flowtype": "*",
+    "flow-bin": "*"
+  },
+  "main": "iex.js",
+  "scripts": {
+    "flow": "flow; test $? -eq 0 -o $? -eq 2",
+    "run": "babel-node iex.js",
+    "transpile": "rm ../../dist/iex_dd -rf && babel --out-dir ../../dist/iex_dd iex.js && babel --out-dir ../../dist/iex_dd/src ./src  && cp ./node_modules ../../dist/iex_dd -r",
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "sh run.sh"
+  },
+  "author": "Casey Primozic <me@ameo.link>",
+  "license": "MIT"
+}

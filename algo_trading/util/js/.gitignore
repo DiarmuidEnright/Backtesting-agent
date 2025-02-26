@@ -1,0 +1,4 @@
+node_modules/
+stripped/
+yarn.lock
+src/conf.js

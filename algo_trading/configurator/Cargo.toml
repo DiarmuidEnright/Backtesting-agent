@@ -1,0 +1,15 @@
+[package]
+name = "configurator"
+version = "0.1.0"
+authors = ["Casey Primozic <me@ameo.link>"]
+
+[dependencies]
+cursive = { version = "0.6.1", default-features = false, features = ["termion-backend"] }
+serde_json = "0.8.4"
+indoc = "^0.1"
+termion = "1.5.0"
+
+[profile.release]
+opt-level = 3
+debug = true
+debug-assertions = false

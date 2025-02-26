@@ -1,0 +1,14 @@
+[package]
+name = "tickgrinder-private"
+version = "0.1.0"
+authors = ["Casey Primozic <me@ameo.link>"]
+description = "Contains the user-defined strategies, indicators, and other custom proprietary parts of the platform."
+
+[lib]
+name = "private"
+crate-type = ["dylib"]
+
+[profile.release]
+opt-level = 3
+debug = true
+debug-assertions = false
