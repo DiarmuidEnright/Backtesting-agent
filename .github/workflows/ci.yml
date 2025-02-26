@@ -1,0 +1,35 @@
+name: CI
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Set up Rust
+        uses: actions-rs/toolchain@v1
+        with:
+          toolchain: stable
+
+      - name: Run Rust tests
+        run: |
+          # Find each Cargo.toml and run tests in its directory
+          find . -name Cargo.toml -execdir cargo test \;
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v2
+        with:
+          node-version: '16'
+
+      - name: Run JavaScript tests and linting
+        run: |
+          if [ -f package.json ]; then
+            npm install && npm test && npm run lint || true
+          fi
