@@ -1,2 +1,2 @@
-# rust_bactesting
+# rust_backtesting
 Basic backtesting software built in rust
