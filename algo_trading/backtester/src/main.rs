@@ -52,20 +52,13 @@ lazy_static!{
 
 /// Starts the backtester module, initializing its interface to the rest of the platform
 fn main() {
-    let args = env::args().collect::<Vec<String>>();
-    let uuid: Uuid;
-
-    match *args.as_slice() {
-        [_, ref uuid_str] => {
-            uuid = Uuid::parse_str(uuid_str.as_str())
-                .expect("Unable to parse Uuid from supplied argument");
-        },
-        _ => panic!("Wrong number of arguments provided!  Usage: ./tick_processor [uuid] [symbol]"),
-    }
+    let args: Vec<String> = env::args().collect();
+    let uuid_str = args.get(1).expect("Usage: ./tick_processor [uuid]");
+    let uuid = Uuid::parse_str(uuid_str)
+        .expect("Unable to parse Uuid from supplied argument");
 
     let backtester = Backtester::new(uuid);
     let mut csc = backtester.cs.clone();
-    let uuid = backtester.uuid;
     backtester.listen(uuid, &mut csc);
 }
 
