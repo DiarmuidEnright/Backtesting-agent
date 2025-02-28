@@ -3,7 +3,6 @@
 
 use std::sync::mpsc;
 use uuid::Uuid;
-
 use {BacktestType, DataSource, DataDest};
 use simbroker::SimBrokerSettings;
 use tickgrinder_util::transport::tickstream::TickstreamCommand;
@@ -27,14 +26,14 @@ pub struct SerializableBacktestHandle {
     pub endpoint: DataDest,
 }
 
-impl SerializableBacktestHandle {
-    pub fn from_handle(handle: &BacktestHandle, uuid: Uuid) -> SerializableBacktestHandle {
+impl From<(Uuid, BacktestHandle)> for SerializableBacktestHandle {
+    fn from((uuid, handle): (Uuid, BacktestHandle)) -> Self {
         SerializableBacktestHandle {
-            uuid: uuid,
-            symbol: handle.symbol.clone(),
-            backtest_type: handle.backtest_type.clone(),
-            data_source: handle.data_source.clone(),
-            endpoint: handle.endpoint.clone(),
+            uuid,
+            symbol: handle.symbol,
+            backtest_type: handle.backtest_type,
+            data_source: handle.data_source,
+            endpoint: handle.endpoint,
         }
     }
 }
@@ -55,29 +54,43 @@ pub struct BacktestDefinition {
 }
 
 /// Ticks sent to the SimBroker should be re-broadcast to the client.
-#[test]
-fn tick_retransmission() {
+#[tokio::test]
+async fn tick_retransmission() {
     use std::collections::HashMap;
-
-    use futures::{Future, Stream};
-
+    use futures::StreamExt;
     use tickgrinder_util::trading::tick::Tick;
     use simbroker::*;
 
-    // create the SimBroker
+    // Create the SimBroker
     let symbol = "TEST".to_string();
-    let mut sim_client = SimBrokerClient::init(HashMap::new()).wait().unwrap().unwrap();
+    let mut sim_client = SimBrokerClient::init(HashMap::new())
+        .await
+        .expect("Failed to initialize SimBrokerClient")
+        .expect("SimBrokerClient returned an error");
 
-    // subscribe to ticks from the SimBroker for the test pair
-    let subbed_ticks = sim_client.sub_ticks(symbol).unwrap();
+    // Subscribe to ticks from the SimBroker for the test symbol
+    let mut tick_stream = sim_client
+        .sub_ticks(symbol)
+        .expect("Failed to subscribe to ticks");
 
-    let res: Vec<Tick> = subbed_ticks
-        .wait()
-        .take(10)
-        .map(|t| {
-            println!("Received tick: {:?}", t);
-            t.unwrap()
-        })
-        .collect();
-    assert_eq!(res.len(), 10);
+    let mut received_ticks = Vec::new();
+    for _ in 0..10 {
+        if let Some(tick_result) = tick_stream.next().await {
+            match tick_result {
+                Ok(tick) => {
+                    println!("Received tick: {:?}", tick);
+                    received_ticks.push(tick);
+                }
+                Err(e) => panic!("Error receiving tick: {:?}", e),
+            }
+        } else {
+            break;
+        }
+    }
+    assert_eq!(
+        received_ticks.len(),
+        10,
+        "Expected 10 ticks, but received {}",
+        received_ticks.len()
+    );
 }
