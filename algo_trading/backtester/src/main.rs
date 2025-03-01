@@ -169,7 +169,7 @@ impl PlatformInstance for Backtester {
                 let simbrokers = self.simbrokers.lock().unwrap();
                 let mut uuids = Vec::new();
                 for (uuid, _) in simbrokers.iter() {
-                    uuids.push(uuid.hyphenated().to_string());
+                    uuids.push(uuid.hyphenated().to_string()); //hyphenated wrapper
                 }
                 let message = serde_json::to_string(&uuids).unwrap();
                 Some(Response::Info{info: message})
