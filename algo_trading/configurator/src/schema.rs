@@ -1,7 +1,6 @@
 //! Contains definitions of the settings schema that are used to generate the configuration directory
 //! and to format the output files.
-
-use misc::{SettingsPage, SettingRow, SettingType};
+use crate::misc::{SettingsPage, SettingRow, SettingType};
 
 pub const PAGE_LIST: &'static [&'static SettingsPage] = &[
     &POSTGRES_SETTINGS,
@@ -210,10 +209,10 @@ pub const COMMANDSERVER_QUERYSERVER_SETTINGS: SettingsPage = SettingsPage {
             name: "CommandServer Timeout",
             default: Some("399"),
             setting_type: SettingType::Usize,
-            comment: Some(indoc!(
+            comment: Some(
                 "The timeout of commands sent in ms.  If a response isn't recieved within the timeout window, \
                 the command is re-sent."
-            )),
+            ),
         },
         SettingRow {
             id: "conn_senders",

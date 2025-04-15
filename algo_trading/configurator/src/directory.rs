@@ -2,9 +2,13 @@
 //! from within the configurator.
 
 use cursive::Cursive;
-use cursive::views::{Dialog, TextView, EditView, ListView, BoxView, LinearLayout, SelectView};
-
-use super::*;
+use cursive::views::{Dialog, TextView, EditView, ListView, BoxedView, LinearLayout, SelectView};
+use cursive::align::VAlign;
+use cursive::CursiveExt;
+use cursive::view::{Nameable, Resizable}; // Added missing traits
+use crate::misc::*;
+use crate::schema::*;
+use crate::write_settings;
 
 /// Draws the global configuration directory which contains all possible settings and their current values.  Users can
 /// page through the various configuration settings and modify them as they desire.
@@ -50,14 +54,14 @@ pub fn show_directory(s: &mut Cursive, settings: Settings, needs_start: bool) {
     let width = s.screen_size().x;
     let settings__ = settings.clone();
 
-    let directory = Dialog::around(LinearLayout::new(Orientation::Vertical)
-        .child(sv.v_align(VAlign::Top).fixed_width(35).with_id("directory-category"))
+    let directory = Dialog::around(LinearLayout::new(cursive::direction::Orientation::Vertical)
+        .child(sv.v_align(VAlign::Top).fixed_width(35).with_name("directory-category"))
         .child(TextView::new("")
             .v_align(VAlign::Center)
-            .with_id("directory-comment")
+            .with_name("directory-comment")
             .fixed_height(4)
         )
-        .child(lv.with_id("directory-lv"))
+        .child(lv.with_name("directory-lv"))
         .fixed_width(width)
     ).button("Exit", move |s| {
         let last_page_ix: usize = settings__.get(String::from("last-page"))
@@ -69,7 +73,7 @@ pub fn show_directory(s: &mut Cursive, settings: Settings, needs_start: bool) {
         if changed {
             s.add_layer(get_save_dialog(last_page_ix, last_page_ix, settings__.clone(), true));
         } else {
-            directory_exit(s, settings__.clone());
+            crate::directory_exit(s, settings__.clone());
         }
     });
     s.add_layer(directory);
@@ -81,11 +85,12 @@ pub fn show_directory(s: &mut Cursive, settings: Settings, needs_start: bool) {
 
 /// Sets the value of the directory's comment box.
 pub fn set_directory_comment(comment: Option<&str>, s: &mut Cursive) {
-    let mut comment_box = s.find_id::<TextView>("directory-comment").unwrap();
-    match comment {
-        Some(comment_str) => comment_box.set_content(comment_str),
-        None => comment_box.set_content(""),
-    }
+    s.call_on_name("directory-comment", |view: &mut TextView| {
+        match comment {
+            Some(comment_str) => view.set_content(comment_str),
+            None => view.set_content(""),
+        }
+    });
 }
 
 /// Returns the Dialog shown when switching between different settings categories in the main settings catalog.
@@ -103,14 +108,14 @@ pub fn get_save_dialog(last_page_ix: usize, new_page_ix: usize, settings: Settin
                 switch_categories(s, PAGE_LIST[new_page_ix], settings_.clone());
                 s.pop_layer();
             } else {
-                directory_exit(s, settings_.clone());
+                crate::directory_exit(s, settings_.clone());
             }
         }).button("Discard", move |s| {
             if !quit {
                 switch_categories(s, PAGE_LIST[new_page_ix], settings__.clone());
                 s.pop_layer();
             } else {
-                directory_exit(s, settings__.clone());
+                crate::directory_exit(s, settings__.clone());
             }
         })
 }
@@ -130,8 +135,9 @@ pub fn get_row_by_name(page: &'static SettingsPage, name: &str) -> &'static Sett
 fn switch_categories(s: &mut Cursive, new_page: &SettingsPage, settings: Settings) {
     // blank out the comment
     set_directory_comment(None, s);
-    let mut lv: &mut ListView = &mut *s.find_id("directory-lv").expect("directory-lv not found");
-    populate_list_view(new_page, lv, settings.clone());
+    s.call_on_name("directory-lv", |lv: &mut ListView| {
+        populate_list_view(new_page, lv, settings.clone());
+    });
     let i = get_page_index(new_page.name)
         .expect("Unable to lookup page!");
     settings.set("last-page", &i.to_string());
@@ -161,7 +167,8 @@ fn populate_list_view(page: &SettingsPage, lv: &mut ListView, settings: Settings
         else if row.default.is_some() {
             ev.set_content(row.default.unwrap());
         }
-        lv.add_child(row.name, BoxView::new(MIN15, FREE, ev.with_id(row.id)))
+        // Fixed BoxedView constructor usage and add proper Box<dyn View>
+        lv.add_child(row.name, BoxedView::new(Box::new(ev.with_name(row.id))));
     }
 }
 
@@ -169,7 +176,8 @@ fn populate_list_view(page: &SettingsPage, lv: &mut ListView, settings: Settings
 /// from the given page differ from the default values for that page.
 fn check_changes(s: &mut Cursive, page: &SettingsPage, settings: Settings) -> bool {
     for row in page.iter() {
-        let cur_val = get_by_id(row.id, s)
+        // Use the misc::get_value_by_id function instead of get_by_id
+        let cur_val = get_value_by_id(row.id, s)
             .expect(&format!("Unable to get {} by id!", row.id));
         let last_val_opt = settings.get(String::from(row.id));
         let last_val = if last_val_opt.is_none() {
@@ -187,7 +195,8 @@ fn check_changes(s: &mut Cursive, page: &SettingsPage, settings: Settings) -> bo
 /// Commits all changes for a page to the internal Settings object and then writes them to all files.
 fn save_changes(s: &mut Cursive, page: &SettingsPage, settings: Settings) {
     for row in page.iter() {
-        let cur_val = get_by_id(row.id, s).expect(&format!("Couldn't get value by id for: {}", row.id));
+        // Use the misc::get_value_by_id function instead of get_by_id
+        let cur_val = get_value_by_id(row.id, s).expect(&format!("Couldn't get value by id for: {}", row.id));
         settings.set(row.id, &*cur_val);
     }
 
